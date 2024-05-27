@@ -1,11 +1,12 @@
-import React, { useContext, useEffect, useReducer } from 'react'
+import React, { useContext, useEffect, useReducer , useState } from 'react'
 import Header from '../components/Header'
 import axios from 'axios'
-import { GET_TESTS } from '../api/test'
+import { GET_TESTS, GET_TEST_REPORT } from '../api/test'
 import { apiReducer, initialState } from '../reducers/apiReducer'
 import AuthContext from '../context/AuthContext'
 import { RiLoader4Line, RiDownload2Line } from 'react-icons/ri'
 import { Link } from 'react-router-dom'
+import exportFromJSON from 'export-from-json'
 
 const Tests = () => {
 
@@ -31,6 +32,25 @@ const Tests = () => {
 
             dispatch({ type: 'FETCH_FAIL', payload: error })
 
+        }
+    }
+
+    const getTestReport = async(testId) => {
+        try {
+            const { data } = await axios.get(GET_TEST_REPORT + testId,
+                {
+                    headers: {
+                        token: authToken
+                    }
+                })
+            const filename = "test"+testId
+            const exportType = exportFromJSON.types.csv
+            const formattedData = Array.isArray(data) ? data : [data];
+            
+            exportFromJSON({ data: formattedData, filename, exportType });
+        }
+        catch(error){
+            console.log(error)
         }
     }
 
@@ -86,7 +106,7 @@ const Tests = () => {
                                                 <td className='p-2 border-2'>{new Date(item?.startTime).toLocaleString()}</td>
                                                 <td className='p-2 border-2'>{new Date(item?.endTime).toLocaleString()}</td>
                                                 <td className='p-2 border-2'>{new Date(item?.createdAt).toLocaleString()}</td>
-                                                <td className='p-2 border-2'>{<RiDownload2Line />}</td>
+                                                <td className='p-2 border-2' onClick={()=>getTestReport(item?._id)}>{<RiDownload2Line />}</td>
                                             </tr>
                                         })
                                     }
